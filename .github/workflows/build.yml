@@ -1,4 +1,3 @@
-
 name: Build APKStation PKG
 on: [push]
 jobs:
@@ -6,13 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld make git curl libicu-dev
-          dotnet --version || (wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb && sudo dpkg -i /tmp/packages-microsoft-prod.deb && sudo apt-get update && sudo apt-get install -y dotnet-sdk-8.0)
-
+          sudo apt-get install -y make curl libicu-dev
+          sudo apt-get install -y dotnet-sdk-8.0 || true
       - name: Install OpenOrbis Toolchain
         run: |
           cd /tmp
@@ -21,25 +18,23 @@ jobs:
           sudo mkdir -p /opt/openorbis
           sudo rm -rf /opt/openorbis/*
           sudo cp -r OpenOrbis/PS4Toolchain/* /opt/openorbis/
-          ls -lh /opt/openorbis/bin/
-          ls -lh /opt/openorbis/bin/linux/
           sudo cp -v /opt/openorbis/bin/linux/* /opt/openorbis/bin/ || true
           sudo chmod +x /opt/openorbis/bin/*
-          ls -lh /opt/openorbis/bin/ | grep -E "fself|gp4|PkgTool|oelf|eboot"
-          /opt/openorbis/bin/create-fself --help | head -20 || true
           echo "/opt/openorbis/bin" >> $GITHUB_PATH
-
       - name: Build PKG
         run: |
           export OO_PS4_TOOLCHAIN=/opt/openorbis
           export PATH=/opt/openorbis/bin:$PATH
-          which create-fself
-          which create-gp4
-          which PkgTool.Core || ls /opt/openorbis/bin/
+          # Recreate folders that flat repo removed
+          mkdir -p core ui android sce_sys assets/images
+          cp -v pad.* core/ 2>/dev/null; cp -v filesystem.* config.* core/ 2>/dev/null
+          cp -v pointer.* launcher.* ui/ 2>/dev/null
+          cp -v apk_manager.* vm_manager.* android/ 2>/dev/null
+          cp -v icon0.png pic0.png pic1.png sce_sys/ 2>/dev/null
+          cp -v bg*.png icon_app.png assets/images/ 2>/dev/null || true
           make clean
-          make -j1
-          ls -lh *.pkg || find . -name "*.pkg" -ls
-
+          make
+          ls -lh *.pkg || find . -name "*.pkg"
       - uses: actions/upload-artifact@v4
         with:
           name: APKStation-Offline-v1
