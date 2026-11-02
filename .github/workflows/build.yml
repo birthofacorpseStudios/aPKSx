@@ -1,0 +1,46 @@
+
+name: Build APKStation PKG
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld make git curl libicu-dev
+          dotnet --version || (wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb && sudo dpkg -i /tmp/packages-microsoft-prod.deb && sudo apt-get update && sudo apt-get install -y dotnet-sdk-8.0)
+
+      - name: Install OpenOrbis Toolchain
+        run: |
+          cd /tmp
+          curl -L -o toolchain.tar.gz https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/releases/download/v0.5.4/toolchain-llvm-18.tar.gz
+          tar -xzf toolchain.tar.gz
+          sudo mkdir -p /opt/openorbis
+          sudo rm -rf /opt/openorbis/*
+          sudo cp -r OpenOrbis/PS4Toolchain/* /opt/openorbis/
+          ls -lh /opt/openorbis/bin/
+          ls -lh /opt/openorbis/bin/linux/
+          sudo cp -v /opt/openorbis/bin/linux/* /opt/openorbis/bin/ || true
+          sudo chmod +x /opt/openorbis/bin/*
+          ls -lh /opt/openorbis/bin/ | grep -E "fself|gp4|PkgTool|oelf|eboot"
+          /opt/openorbis/bin/create-fself --help | head -20 || true
+          echo "/opt/openorbis/bin" >> $GITHUB_PATH
+
+      - name: Build PKG
+        run: |
+          export OO_PS4_TOOLCHAIN=/opt/openorbis
+          export PATH=/opt/openorbis/bin:$PATH
+          which create-fself
+          which create-gp4
+          which PkgTool.Core || ls /opt/openorbis/bin/
+          make clean
+          make -j1
+          ls -lh *.pkg || find . -name "*.pkg" -ls
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: APKStation-Offline-v1
+          path: "*.pkg"
