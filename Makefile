@@ -5,8 +5,8 @@ TITLE := APKStation - Offline APK Launcher
 CONTENT_ID := IV0000-APKSTATION01_00-APKSTATION001
 VERSION := 01.00
 
-CC := clang
-CXX := clang++
+CC := $(OO)/bin/clang
+CXX := $(OO)/bin/clang++
 OO := /opt/openorbis
 # Allow env override
 ifneq ($(OO_PS4_TOOLCHAIN),)
