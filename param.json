@@ -1,0 +1,10 @@
+{
+  "TITLE": "APKStation",
+  "TITLE_ID": "APKSTATION01",
+  "APP_VER": "01.00",
+  "VERSION": "01.00",
+  "CATEGORY": "gd",
+  "CONTENT_ID": "IV0000-APKSTATION01_00-APKSTATION001",
+  "TITLE_LANGS": {"en": "APKStation - Android APK Launcher"},
+  "PRIVILEGES": "full-homebrew"
+}
